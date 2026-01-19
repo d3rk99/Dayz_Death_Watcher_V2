@@ -132,7 +132,10 @@ class DeathWatcherBot(commands.Bot):
         self._background_tasks.append(asyncio.create_task(self._run_vc_check_loop()))
         self._background_tasks.append(asyncio.create_task(self._run_leaderboard_loop()))
         self._background_tasks.append(asyncio.create_task(self.voice_action_queue.run(self)))
-        await self.tree.sync(guild=discord.Object(id=self.config.discord.guild_id))
+        if self.config.discord.guild_id:
+            await self.tree.sync(guild=discord.Object(id=self.config.discord.guild_id))
+        else:
+            await self.tree.sync()
 
     async def close(self) -> None:
         for task in self._background_tasks:
@@ -498,6 +501,12 @@ class DeathWatcherBot(commands.Bot):
         self.users_repo.save(self.users_db)
         await self._apply_role_swap(user, alive=True)
         await interaction.followup.send("Validated and added to lists.", ephemeral=True)
+        try:
+            await interaction.user.send(
+                "Validation complete. If you don't see a DM, check your privacy settings for this server."
+            )
+        except discord.Forbidden:
+            pass
 
     @app_commands.command(name="validatesteamid", description="Validate a Steam64 ID")
     async def validatesteamid(self, interaction: discord.Interaction, steam64: str) -> None:
