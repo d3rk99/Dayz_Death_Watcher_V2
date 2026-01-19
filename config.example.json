@@ -7,23 +7,37 @@
     "role_admin_id": 0,
     "validate_steam_channel_id": 0,
     "dump_channel_id": 0,
-    "error_dump_channel_id": 0,
     "join_vc_id": 0,
     "join_vc_category_id": 0,
     "leaderboard_channel_id": 0
+  },
+  "error_reporting": {
+    "error_dump_channel_id": 0,
+    "error_dump_allow_mention": false,
+    "error_dump_mention_tag": "@AdminRole",
+    "error_dump_rate_limit_seconds": 120,
+    "error_dump_include_traceback": true
+  },
+  "steam": {
+    "api_key": "YOUR_STEAM_WEB_API_KEY",
+    "timeout_seconds": 6
   },
   "servers": [
     {
       "server_id": "server1",
       "path_to_logs_directory": "C:/DayZServers/Server1/Profiles/Logs",
       "path_to_bans": "C:/DayZServers/Server1/battlEye/ban.txt",
-      "path_to_whitelist": "C:/DayZServers/Server1/whitelist.txt"
+      "path_to_whitelist": "C:/DayZServers/Server1/whitelist.txt",
+      "enable_death_scanning": true,
+      "enable_voice_enforcement": true,
+      "enable_whitelist_sync": true,
+      "enable_ban_sync": true
     }
   ],
   "paths": {
     "data_dir": "data",
-    "users_db_path": "data/users.json",
-    "cursor_cache_path": "data/cursors.json",
+    "users_db_path": "data/userdata_db.json",
+    "cursor_cache_path": "data/cursor_cache.json",
     "audit_log_path": "data/audit.log"
   },
   "policy": {
@@ -34,14 +48,23 @@
   "features": {
     "enable_deathwatcher": true,
     "enable_voice_enforcement": true,
-    "enable_leaderboard": true
+    "enable_leaderboard": true,
+    "enable_discord_cogs": []
   },
   "leaderboard": {
     "enabled": true,
     "schedule_minutes": 0,
     "metric": "longest_alive"
   },
+  "legacy_logs": {
+    "tail_mode": "newest_only",
+    "backlog_max_lines": 200,
+    "strict_death_schema": true,
+    "archive_old_logs": false
+  },
   "ban_duration_minutes": 30,
   "verbose_logs": false,
-  "archive_old_logs": false
+  "voice_enforcement_interval_seconds": 10,
+  "voice_debounce_seconds": 4,
+  "delete_user_remove_lists": true
 }

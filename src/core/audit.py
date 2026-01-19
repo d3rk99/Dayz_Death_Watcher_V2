@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Any, Dict
 import json
 
+from .locks import file_lock_for
 
 @dataclass
 class AuditEvent:
@@ -29,5 +30,7 @@ class AuditLogger:
         self.path.parent.mkdir(parents=True, exist_ok=True)
 
     def write(self, event: AuditEvent) -> None:
-        with self.path.open("a", encoding="utf-8") as handle:
-            handle.write(event.to_line() + "\n")
+        lock = file_lock_for(self.path)
+        with lock:
+            with self.path.open("a", encoding="utf-8") as handle:
+                handle.write(event.to_line() + "\n")
