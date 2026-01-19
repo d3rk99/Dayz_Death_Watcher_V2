@@ -68,12 +68,15 @@ class ActionQueue:
 
     async def run(self, bot: "DeathWatcherBot") -> None:
         while True:
-            pending = await self.queue.get()
             try:
-                await pending.action()
-            except Exception as exc:
-                await bot.error_reporter.report(bot, f"Action failed: {pending.label}", exc)
-            await asyncio.sleep(self.delay_seconds)
+                pending = await self.queue.get()
+                try:
+                    await pending.action()
+                except Exception as exc:
+                    await bot.error_reporter.report(bot, f"Action failed: {pending.label}", exc)
+                await asyncio.sleep(self.delay_seconds)
+            except asyncio.CancelledError:
+                break
 
 
 class DeathWatcherBot(commands.Bot):
