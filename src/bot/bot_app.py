@@ -129,6 +129,7 @@ class DeathWatcherBot(commands.Bot):
             await self.tree.sync()
             guild = discord.Object(id=self.config.discord.guild_id)
             self.tree.clear_commands(guild=guild)
+            await self.tree.sync(guild=guild)
             for command in command_list:
                 self.tree.add_command(command, guild=guild)
             await self.tree.sync(guild=guild)
