@@ -39,7 +39,7 @@ class DeathWatcherBot(commands.Bot):
         self.audit = AuditLogger(Path(self.config.paths.audit_log_path))
         self.users_repo = UsersRepository(Path(self.config.paths.users_db_path))
         self.cursor_repo = CursorRepository(Path(self.config.paths.cursor_cache_path))
-        self.users = self.users_repo.load()
+        self.users_db = self.users_repo.load()
         self.cursor_map = self.cursor_repo.load()
         self.policy = ServerPolicy(self.config.policy)
         self.validator = SteamValidator()
@@ -117,7 +117,7 @@ class DeathWatcherBot(commands.Bot):
             await channel.send(f"{action.title()} applied for {user.steam_id}")
 
     def _get_user_by_discord_id(self, discord_id: str) -> Optional[UserRecord]:
-        for user in self.users.users.values():
+        for user in self.users_db.users.values():
             if user.discord_id == discord_id:
                 return user
         return None
@@ -132,15 +132,15 @@ class DeathWatcherBot(commands.Bot):
                 if not parsed:
                     continue
                 steam_id = parsed["steam_id"]
-                user = self.users.users.get(steam_id, UserRecord(steam_id=steam_id))
+                user = self.users_db.users.get(steam_id, UserRecord(steam_id=steam_id))
                 user.dead = True
                 user.last_alive_sec = parsed.get("alive_sec")
                 user.death_count += 1
-                self.users.users[steam_id] = user
+                self.users_db.users[steam_id] = user
                 adapter = DayZListAdapter(ServerLists(Path(server.path_to_bans), Path(server.path_to_whitelist)))
                 adapter.add_to_ban(steam_id)
                 self._start_timer(steam_id)
-                self.users_repo.save(self.users)
+                self.users_repo.save(self.users_db)
                 self.cursor_map[server.server_id] = tailer.cursor
                 self.cursor_repo.save(self.cursor_map)
                 self.audit.write(
@@ -159,10 +159,10 @@ class DeathWatcherBot(commands.Bot):
         now = datetime.now(timezone.utc)
         expired = [steam_id for steam_id, timer in self.timers.items() if timer.expires_at <= now]
         for steam_id in expired:
-            user = self.users.users.get(steam_id)
+            user = self.users_db.users.get(steam_id)
             if user:
                 user.dead = False
-                self.users_repo.save(self.users)
+                self.users_repo.save(self.users_db)
                 await self._apply_unban_for_user(user)
             self.timers.pop(steam_id, None)
 
@@ -171,17 +171,17 @@ class DeathWatcherBot(commands.Bot):
         if not self.validator.validate(steam64):
             await interaction.response.send_message("Invalid Steam64 ID.", ephemeral=True)
             return
-        user = self.users.users.get(steam64, UserRecord(steam_id=steam64))
+        user = self.users_db.users.get(steam64, UserRecord(steam_id=steam64))
         user.discord_id = str(interaction.user.id)
         user.dead = False
-        self.users.users[steam64] = user
+        self.users_db.users[steam64] = user
         server_ids = [server.server_id for server in self.config.servers]
         for server in self.config.servers:
             adapter = DayZListAdapter(ServerLists(Path(server.path_to_bans), Path(server.path_to_whitelist)))
             if server.server_id in self.policy.resolve_whitelist_targets(user, server_ids):
                 adapter.add_to_whitelist(steam64)
             adapter.add_to_ban(steam64)
-        self.users_repo.save(self.users)
+        self.users_repo.save(self.users_db)
         await interaction.response.send_message("Validated and added to lists.", ephemeral=True)
 
     @app_commands.command(name="setserver", description="Set active server ID for your account")
@@ -191,7 +191,7 @@ class DeathWatcherBot(commands.Bot):
             await interaction.response.send_message("User not validated.", ephemeral=True)
             return
         user.active_server_id = server_id
-        self.users_repo.save(self.users)
+        self.users_repo.save(self.users_db)
         await interaction.response.send_message(f"Active server set to {server_id}.", ephemeral=True)
 
     @app_commands.command(name="revive", description="Admin revive a user by Steam64")
@@ -199,12 +199,12 @@ class DeathWatcherBot(commands.Bot):
         if not interaction.user.guild_permissions.administrator:
             await interaction.response.send_message("Unauthorized.", ephemeral=True)
             return
-        user = self.users.users.get(steam64)
+        user = self.users_db.users.get(steam64)
         if not user:
             await interaction.response.send_message("User not found.", ephemeral=True)
             return
         user.dead = False
-        self.users_repo.save(self.users)
+        self.users_repo.save(self.users_db)
         await self._apply_unban_for_user(user)
         await interaction.response.send_message("User revived.", ephemeral=True)
 
@@ -213,10 +213,10 @@ class DeathWatcherBot(commands.Bot):
         if not interaction.user.guild_permissions.administrator:
             await interaction.response.send_message("Unauthorized.", ephemeral=True)
             return
-        user = self.users.users.get(steam64, UserRecord(steam_id=steam64))
+        user = self.users_db.users.get(steam64, UserRecord(steam_id=steam64))
         user.dead = True
-        self.users.users[steam64] = user
-        self.users_repo.save(self.users)
+        self.users_db.users[steam64] = user
+        self.users_repo.save(self.users_db)
         await self._apply_ban_for_user(user)
         await interaction.response.send_message("User banned.", ephemeral=True)
 
@@ -225,12 +225,12 @@ class DeathWatcherBot(commands.Bot):
         if not interaction.user.guild_permissions.administrator:
             await interaction.response.send_message("Unauthorized.", ephemeral=True)
             return
-        user = self.users.users.get(steam64)
+        user = self.users_db.users.get(steam64)
         if not user:
             await interaction.response.send_message("User not found.", ephemeral=True)
             return
         user.dead = False
-        self.users_repo.save(self.users)
+        self.users_repo.save(self.users_db)
         await self._apply_unban_for_user(user)
         await interaction.response.send_message("User unbanned.", ephemeral=True)
 
@@ -239,6 +239,6 @@ class DeathWatcherBot(commands.Bot):
         if not interaction.user.guild_permissions.administrator:
             await interaction.response.send_message("Unauthorized.", ephemeral=True)
             return
-        self.users = UsersDatabase()
-        self.users_repo.save(self.users)
+        self.users_db = UsersDatabase()
+        self.users_repo.save(self.users_db)
         await interaction.response.send_message("Database wiped.", ephemeral=True)
