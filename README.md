@@ -71,12 +71,20 @@ pip install -U discord.py
 ## Configuration
 
 Update `config.json` with:
+1. Copy the example config and update paths + IDs:
+
+```bash
+cp config.example.json config.json
+```
+
+2. Update `config.json` with:
 
 - Discord token, guild ID, role IDs, channel IDs.
 - For each server: paths to Detailed Logs, `ban.txt`, and `whitelist.txt`.
 - Policy mode and ban duration.
 
 ## Running (manual)
+## Running
 
 ### Discord bot
 
