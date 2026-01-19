@@ -123,12 +123,20 @@ class DeathWatcherBot(commands.Bot):
         self._background_tasks.append(asyncio.create_task(self._run_vc_check_loop()))
         self._background_tasks.append(asyncio.create_task(self._run_leaderboard_loop()))
         self._background_tasks.append(asyncio.create_task(self.voice_action_queue.run(self)))
-        await self.tree.sync()
+        command_list = self._app_commands()
         if self.config.discord.guild_id:
+            self.tree.clear_commands()
+            await self.tree.sync()
             guild = discord.Object(id=self.config.discord.guild_id)
             self.tree.clear_commands(guild=guild)
-            self.tree.copy_global_to(guild=guild)
+            for command in command_list:
+                self.tree.add_command(command, guild=guild)
             await self.tree.sync(guild=guild)
+        else:
+            self.tree.clear_commands()
+            for command in command_list:
+                self.tree.add_command(command)
+            await self.tree.sync()
 
     async def close(self) -> None:
         for task in self._background_tasks:
@@ -238,6 +246,19 @@ class DeathWatcherBot(commands.Bot):
 
     def _any_server_voice_enabled(self) -> bool:
         return any(server.enable_voice_enforcement for server in self.config.servers)
+
+    def _app_commands(self) -> List[app_commands.Command]:
+        return [
+            self.validatesteamid,
+            self.validate,
+            self.setserver,
+            self.revive,
+            self.ban,
+            self.unban,
+            self.userdata,
+            self.delete_user_from_database,
+            self.wipe,
+        ]
 
     def _debounce_allowed(self, steam_id: str) -> bool:
         now = _utc_now()
