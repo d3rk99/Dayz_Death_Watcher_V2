@@ -125,7 +125,7 @@ class DeathWatcherBot(commands.Bot):
         self._background_tasks.append(asyncio.create_task(self.voice_action_queue.run(self)))
         command_list = self._app_commands()
         if self.config.discord.guild_id:
-            self.tree.clear_commands()
+            self.tree.clear_commands(guild=None)
             await self.tree.sync()
             guild = discord.Object(id=self.config.discord.guild_id)
             self.tree.clear_commands(guild=guild)
@@ -133,7 +133,7 @@ class DeathWatcherBot(commands.Bot):
                 self.tree.add_command(command, guild=guild)
             await self.tree.sync(guild=guild)
         else:
-            self.tree.clear_commands()
+            self.tree.clear_commands(guild=None)
             for command in command_list:
                 self.tree.add_command(command)
             await self.tree.sync()
