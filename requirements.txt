@@ -1,1 +1,2 @@
 discord.py>=2.3.2
+filelock>=3.12.4

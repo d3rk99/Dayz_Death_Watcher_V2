@@ -9,6 +9,8 @@ DeathWatcher v2 is a Python Discord bot + local desktop GUI that manages death-b
 - **Policy-driven unban logic** for single active server, all servers, or per-user home server.
 - **Local GUI** with dark/light toggle, live logs, settings editor, and safe admin actions.
 - **Future-ready architecture** to support server travel/linking.
+- **Steam Web API validation** (same validation flow as v1).
+- **Error reporting controls** with rate-limited Discord dumps + audit log.
 
 ## Repository Structure
 
@@ -82,6 +84,8 @@ cp config.example.json config.json
 - Discord token, guild ID, role IDs, channel IDs.
 - For each server: paths to Detailed Logs, `ban.txt`, and `whitelist.txt`.
 - Policy mode and ban duration.
+- Steam Web API key for validation.
+- Error reporting and log tailing controls.
 
 ## Running (manual)
 ## Running
@@ -131,6 +135,8 @@ Users can set their active server via `/setserver <serverId>`.
 - `/revive <steam64>` — admin revive.
 - `/ban <steam64>` — admin ban.
 - `/unban <steam64>` — admin unban.
+- `/userdata <steam64_or_discordId>` — lookup user record.
+- `/delete_user_from_database <steam64_or_discordId>` — delete a user record (admin + confirm).
 - `/wipe` — wipe user DB (danger zone).
 
 ## GUI Overview
@@ -145,24 +151,26 @@ Tabs include:
 6. Leaderboard
 7. Settings (config editor + reload)
 8. Danger Zone
+9. User Tools (GUI equivalents for `/userdata` and `/delete_user_from_database`)
 
 GUI is read-only by default. Toggle **Enable Writes** to allow DB edits or dangerous actions.
 
 ## Data Files
 
-- `data/users.json` — unified user database.
-- `data/cursors.json` — per-server log cursor offsets.
+- `data/userdata_db.json` — unified user database.
+- `data/cursor_cache.json` — per-server log cursor offsets.
 - `data/audit.log` — append-only activity log for GUI.
 
 ## Notes
 
-- Log tailer handles partial lines and JSON decode errors safely.
+- Log tailer handles partial lines and JSON decode errors safely (strict or lenient schema).
 - Ban/whitelist writes are atomic and de-duplicated.
 - No RCON required.
 
-## Next Steps
+## Voice Enforcement
 
-- Add GUI list viewers for ban/whitelist files.
-- Add live log streaming per server in GUI.
-- Implement Steam Web API validator interface.
-- Expand leaderboard generation and posting.
+Alive players are only unbanned when inside their private VC (channel name == their Discord ID). Leaving that VC re-bans them. Timed revives reset roles and can unban immediately if the user is already in their private VC.
+
+## Error Reporting
+
+Errors are written to `audit.log` and can be dumped to a Discord channel with optional mention tags and rate limits. Configure in `error_reporting`.

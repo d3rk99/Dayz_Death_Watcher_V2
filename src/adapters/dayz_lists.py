@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable, Set
-from ..core.utils import atomic_write, read_lines
+from ..core.utils import atomic_write_locked, read_lines_locked
 
 
 @dataclass
@@ -17,12 +17,12 @@ class DayZListAdapter:
         self.paths = paths
 
     def _load_set(self, path: Path) -> Set[str]:
-        return {line.strip() for line in read_lines(path) if line.strip()}
+        return {line.strip() for line in read_lines_locked(path) if line.strip()}
 
     def _save_set(self, path: Path, values: Iterable[str]) -> None:
         content = "\n".join(sorted(set(values))) + "\n"
         path.parent.mkdir(parents=True, exist_ok=True)
-        atomic_write(path, content)
+        atomic_write_locked(path, content)
 
     def add_to_ban(self, steam_id: str) -> None:
         entries = self._load_set(self.paths.ban_list_path)
