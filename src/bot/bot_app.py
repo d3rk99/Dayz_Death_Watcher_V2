@@ -482,7 +482,7 @@ class DeathWatcherBot(commands.Bot):
             return False
         return any(role.id == self.config.discord.role_admin_id for role in interaction.user.roles)
 
-    async def _handle_validate(self, interaction: discord.Interaction, steam64: str) -> None:
+    async def _handle_validate(self, interaction: discord.Interaction, steam_id: str) -> None:
         if self.config.discord.validate_steam_channel_id and (
             interaction.channel_id != self.config.discord.validate_steam_channel_id
         ):
@@ -493,7 +493,7 @@ class DeathWatcherBot(commands.Bot):
             return
         await interaction.response.defer(ephemeral=True)
         try:
-            is_valid = await self.validator.validate(steam64)
+            is_valid = await self.validator.validate(steam_id)
         except Exception as exc:
             await self.error_reporter.report(self, "Steam validation failed", exc)
             await interaction.followup.send("Validation failed (Steam API).", ephemeral=True)
@@ -501,18 +501,18 @@ class DeathWatcherBot(commands.Bot):
         if not is_valid:
             await interaction.followup.send("Invalid Steam64 ID.", ephemeral=True)
             return
-        user = self.users_db.users.get(steam64, UserRecord(steam_id=steam64))
+        user = self.users_db.users.get(steam_id, UserRecord(steam_id=steam_id))
         user.discord_id = str(interaction.user.id)
         user.dead = False
         user.dead_until = None
         user.last_dead_at = None
-        self.users_db.users[steam64] = user
+        self.users_db.users[steam_id] = user
         for server in self.config.servers:
             adapter = DayZListAdapter(ServerLists(Path(server.path_to_bans), Path(server.path_to_whitelist)))
             if server.enable_whitelist_sync and server.server_id in self._resolve_whitelist_targets(user):
-                adapter.add_to_whitelist(steam64)
+                adapter.add_to_whitelist(steam_id)
             if server.enable_ban_sync:
-                adapter.add_to_ban(steam64)
+                adapter.add_to_ban(steam_id)
         self.users_repo.save(self.users_db)
         await self._apply_role_swap(user, alive=True)
         await interaction.followup.send("Validated and added to lists.", ephemeral=True)
@@ -524,12 +524,12 @@ class DeathWatcherBot(commands.Bot):
             pass
 
     @app_commands.command(name="validatesteamid", description="Validate a Steam64 ID")
-    async def validatesteamid(self, interaction: discord.Interaction, steam64: str) -> None:
-        await self._handle_validate(interaction, steam64)
+    async def validatesteamid(self, interaction: discord.Interaction, steam_id: str) -> None:
+        await self._handle_validate(interaction, steam_id)
 
     @app_commands.command(name="validate", description="Validate a Steam64 ID")
-    async def validate(self, interaction: discord.Interaction, steam64: str) -> None:
-        await self._handle_validate(interaction, steam64)
+    async def validate(self, interaction: discord.Interaction, steam_id: str) -> None:
+        await self._handle_validate(interaction, steam_id)
 
     @app_commands.command(name="setserver", description="Set active server ID for your account")
     async def setserver(self, interaction: discord.Interaction, server_id: str) -> None:
