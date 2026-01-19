@@ -116,6 +116,7 @@ class DeathWatcherBot(commands.Bot):
 
     async def setup_hook(self) -> None:
         self.tree.add_command(self.validatesteamid)
+        self.tree.add_command(self.validate)
         self.tree.add_command(self.setserver)
         self.tree.add_command(self.revive)
         self.tree.add_command(self.ban)
@@ -459,8 +460,15 @@ class DeathWatcherBot(commands.Bot):
             return False
         return any(role.id == self.config.discord.role_admin_id for role in interaction.user.roles)
 
-    @app_commands.command(name="validatesteamid", description="Validate a Steam64 ID")
-    async def validatesteamid(self, interaction: discord.Interaction, steam64: str) -> None:
+    async def _handle_validate(self, interaction: discord.Interaction, steam64: str) -> None:
+        if self.config.discord.validate_steam_channel_id and (
+            interaction.channel_id != self.config.discord.validate_steam_channel_id
+        ):
+            await interaction.response.send_message(
+                f"Use the validation channel <#{self.config.discord.validate_steam_channel_id}>.",
+                ephemeral=True,
+            )
+            return
         await interaction.response.defer(ephemeral=True)
         try:
             is_valid = await self.validator.validate(steam64)
@@ -486,6 +494,14 @@ class DeathWatcherBot(commands.Bot):
         self.users_repo.save(self.users_db)
         await self._apply_role_swap(user, alive=True)
         await interaction.followup.send("Validated and added to lists.", ephemeral=True)
+
+    @app_commands.command(name="validatesteamid", description="Validate a Steam64 ID")
+    async def validatesteamid(self, interaction: discord.Interaction, steam64: str) -> None:
+        await self._handle_validate(interaction, steam64)
+
+    @app_commands.command(name="validate", description="Validate a Steam64 ID")
+    async def validate(self, interaction: discord.Interaction, steam64: str) -> None:
+        await self._handle_validate(interaction, steam64)
 
     @app_commands.command(name="setserver", description="Set active server ID for your account")
     async def setserver(self, interaction: discord.Interaction, server_id: str) -> None:
