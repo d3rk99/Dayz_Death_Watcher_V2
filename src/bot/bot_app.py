@@ -119,15 +119,6 @@ class DeathWatcherBot(commands.Bot):
         self.voice_last_action: Dict[str, datetime] = {}
 
     async def setup_hook(self) -> None:
-        self.tree.add_command(self.validatesteamid)
-        self.tree.add_command(self.validate)
-        self.tree.add_command(self.setserver)
-        self.tree.add_command(self.revive)
-        self.tree.add_command(self.ban)
-        self.tree.add_command(self.unban)
-        self.tree.add_command(self.userdata)
-        self.tree.add_command(self.delete_user_from_database)
-        self.tree.add_command(self.wipe)
         self._background_tasks.append(asyncio.create_task(self._run_background_tasks()))
         self._background_tasks.append(asyncio.create_task(self._run_vc_check_loop()))
         self._background_tasks.append(asyncio.create_task(self._run_leaderboard_loop()))
