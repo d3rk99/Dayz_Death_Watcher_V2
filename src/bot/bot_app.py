@@ -133,7 +133,10 @@ class DeathWatcherBot(commands.Bot):
         self._background_tasks.append(asyncio.create_task(self._run_leaderboard_loop()))
         self._background_tasks.append(asyncio.create_task(self.voice_action_queue.run(self)))
         if self.config.discord.guild_id:
-            await self.tree.sync(guild=discord.Object(id=self.config.discord.guild_id))
+            guild = discord.Object(id=self.config.discord.guild_id)
+            self.tree.clear_commands(guild=guild)
+            self.tree.copy_global_to(guild=guild)
+            await self.tree.sync(guild=guild)
         else:
             await self.tree.sync()
 
