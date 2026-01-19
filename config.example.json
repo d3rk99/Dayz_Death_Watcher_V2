@@ -1,0 +1,47 @@
+{
+  "discord": {
+    "token": "YOUR_BOT_TOKEN",
+    "guild_id": 0,
+    "role_alive_id": 0,
+    "role_dead_id": 0,
+    "role_admin_id": 0,
+    "validate_steam_channel_id": 0,
+    "dump_channel_id": 0,
+    "error_dump_channel_id": 0,
+    "join_vc_id": 0,
+    "join_vc_category_id": 0,
+    "leaderboard_channel_id": 0
+  },
+  "servers": [
+    {
+      "server_id": "server1",
+      "path_to_logs_directory": "C:/DayZServers/Server1/Profiles/Logs",
+      "path_to_bans": "C:/DayZServers/Server1/battlEye/ban.txt",
+      "path_to_whitelist": "C:/DayZServers/Server1/whitelist.txt"
+    }
+  ],
+  "paths": {
+    "data_dir": "data",
+    "users_db_path": "data/users.json",
+    "cursor_cache_path": "data/cursors.json",
+    "audit_log_path": "data/audit.log"
+  },
+  "policy": {
+    "mode": "single_active_server",
+    "default_active_server_id": "server1",
+    "whitelist_on_validate": "all_servers"
+  },
+  "features": {
+    "enable_deathwatcher": true,
+    "enable_voice_enforcement": true,
+    "enable_leaderboard": true
+  },
+  "leaderboard": {
+    "enabled": true,
+    "schedule_minutes": 0,
+    "metric": "longest_alive"
+  },
+  "ban_duration_minutes": 30,
+  "verbose_logs": false,
+  "archive_old_logs": false
+}
