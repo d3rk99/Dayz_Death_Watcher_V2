@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -48,6 +49,7 @@ class DeathWatcherBot(commands.Bot):
             server.server_id: LjsonTailer(Path(server.path_to_logs_directory), self.cursor_map.get(server.server_id, 0))
             for server in self.config.servers
         }
+        self._background_task: Optional[asyncio.Task[None]] = None
 
     async def setup_hook(self) -> None:
         self.tree.add_command(self.validatesteamid)
@@ -56,7 +58,24 @@ class DeathWatcherBot(commands.Bot):
         self.tree.add_command(self.ban)
         self.tree.add_command(self.unban)
         self.tree.add_command(self.wipe)
+        self._background_task = asyncio.create_task(self._run_background_tasks())
         await self.tree.sync(guild=discord.Object(id=self.config.discord.guild_id))
+
+    async def close(self) -> None:
+        if self._background_task:
+            self._background_task.cancel()
+            try:
+                await self._background_task
+            except asyncio.CancelledError:
+                pass
+        await super().close()
+
+    async def _run_background_tasks(self) -> None:
+        await self.wait_until_ready()
+        while not self.is_closed():
+            await self.poll_logs()
+            await self.process_timers()
+            await asyncio.sleep(2)
 
     async def on_ready(self) -> None:
         self.audit.write(AuditEvent(event="bot_ready", message="Bot connected", context={}))
