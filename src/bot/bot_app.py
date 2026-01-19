@@ -85,6 +85,7 @@ class DeathWatcherBot(commands.Bot):
         intents.members = True
         intents.voice_states = True
         intents.guilds = True
+        intents.message_content = True
         super().__init__(command_prefix="!", intents=intents)
         self.config_loader = ConfigLoader(config_path)
         self.config = self.config_loader.load()
