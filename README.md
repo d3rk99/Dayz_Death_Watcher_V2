@@ -26,6 +26,42 @@ src/
 - Python 3.11+
 - discord.py 2.x
 
+## Windows Setup (recommended)
+
+1. Copy the example config and update paths + IDs:
+
+```bat
+copy config.example.json config.json
+```
+
+2. Create the virtual environment and install dependencies:
+
+```bat
+setup_env.bat
+```
+
+## Running (Windows)
+
+### Discord bot
+
+```bat
+run_bot.bat
+```
+
+### Desktop GUI
+
+```bat
+run_gui.bat
+```
+
+### Run both
+
+```bat
+run_all.bat
+```
+
+## Manual Setup (any OS)
+
 Install dependencies:
 
 ```bash
@@ -34,6 +70,7 @@ pip install -U discord.py
 
 ## Configuration
 
+Update `config.json` with:
 1. Copy the example config and update paths + IDs:
 
 ```bash
@@ -46,6 +83,7 @@ cp config.example.json config.json
 - For each server: paths to Detailed Logs, `ban.txt`, and `whitelist.txt`.
 - Policy mode and ban duration.
 
+## Running (manual)
 ## Running
 
 ### Discord bot
